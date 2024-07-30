@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 import sqlite3
+import webbrowser
 
 root = Tk()
 
@@ -85,6 +86,31 @@ class Functions():
         self.limparCampos()
         self.selectLista()
    
+    def alterarCliente(self):
+
+        self.variaveis()
+        self.conexaoBanco()
+        self.cursor.execute("""UPDATE clientes SET nome = ?, email = ?, cidade = ? WHERE cod = ?""", (self.nome, self.email, self.cidade, self.codigo))
+        self.conn.commit()
+        self.desconectaBanco()
+        self.selectLista()
+        self.limparCampos()
+
+    def buscaCliente(self):
+        self.conexaoBanco()
+        self.listaClientes.delete(*self.listaClientes.get_children())
+
+        self.nome.entry.insert(END, '%')
+        nome = self.nome_entry.get() #Problema aqui "NAO ESTA RECONDENDO O NOME"
+        self.cursor.execute("""SELECT cod, nome, email, cidade FROM clientes WHERE nome LIKE '%s' ORDER BY nome ASC""" % nome)
+
+        buscar = self.cursor.fetchall()
+        for i in buscar:
+            self.listaClientes.insert("", END, values=i)
+
+        self.limparCampos()
+
+        self.desconectaBanco()   
 
 class Application(Functions):
 
@@ -96,6 +122,7 @@ class Application(Functions):
         self.list_frame_2()
         self.montaTabelas()
         self.selectLista()
+        self.menus()
         root.mainloop()
 
     def tela(self):
@@ -115,13 +142,13 @@ class Application(Functions):
         self.bt_limpar = Button(self.frame_1,text='Limpar',bg="#76ABAE",command=self.limparCampos)
         self.bt_limpar.place(relx=0.2, rely=0.10, relwidth=0.1, relheight=0.15,)
 
-        self.bt_buscar = Button(self.frame_1,text='Buscar',bg="#76ABAE")
+        self.bt_buscar = Button(self.frame_1,text='Buscar',bg="#76ABAE",command=self.buscaCliente)
         self.bt_buscar.place(relx=0.3, rely=0.10, relwidth=0.1, relheight=0.15)
 
         self.bt_novo = Button(self.frame_1,text='Novo',bg="#76ABAE",command=self.addCliente)
         self.bt_novo.place(relx=0.5, rely=0.10, relwidth=0.1, relheight=0.15)
     
-        self.bt_alterar = Button(self.frame_1,text='Alterar',bg="#76ABAE")
+        self.bt_alterar = Button(self.frame_1,text='Alterar',bg="#76ABAE",command=self.alterarCliente)
         self.bt_alterar.place(relx=0.6, rely=0.10, relwidth=0.1, relheight=0.15)
 
         self.bt_excluir = Button(self.frame_1,text='Excluir',bg="#76ABAE", command=self.deleteCliente)
@@ -175,5 +202,23 @@ class Application(Functions):
 
         self.listaClientes.bind("<Double-1>", self.doubleClick)
 
+    def menus(self):
+        menubar = Menu(self.root)
+        self.root.config(menu=menubar)
+
+        filemenu = Menu(menubar)
+        filemenu2 = Menu(menubar)
+
+        def quit(): self.root.destroy()
+    
+        menubar.add_cascade(label='Opções', menu=filemenu)
+        menubar.add_cascade(label='Sobre', menu=filemenu2)
+        
+        filemenu.add_command(label='Sair', command=quit)
+
+        def linkedin():
+            webbrowser.open('https:/www.linkedin.com/in/davi-leite-alencar-a79608230/')
+
+        filemenu2.add_command(label='Davi Leite', command=linkedin)
 
 Application()
